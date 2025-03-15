@@ -23,6 +23,8 @@ Run the installer and follow the prompts to complete the installation.
 Download Git from git-scm.com.
 Install Git and configure it with your GitHub account.
 Tip: During installation, you can select the default options unless you have specific preferences.
+
+
 2. Set Up the RMarkdown Project
 Create a New RMarkdown Document:
 
@@ -37,6 +39,9 @@ Replace the default content with your project’s RMarkdown content. Make sure y
 Save the RMarkdown File:
 
 Save the file with a descriptive name, for example, economic_analysis.Rmd.
+
+
+
 3. Install the Necessary R Packages
 Before running the document, install the packages needed for your analysis. Open a new R script or use the console, and run:
 
@@ -45,6 +50,7 @@ Copy
 install.packages(c("tidyverse", "gapminder", "psych", "ggplot2", "dplyr", 
                    "knitr", "kableExtra", "broom", "stargazer", "corrplot", "bibtex"))
 Tip: If you encounter any package installation issues, check that your CRAN mirror is correctly set up.
+
 
 4. Render the RMarkdown Document
 Using RStudio:
@@ -59,48 +65,4 @@ r
 Copy
 rmarkdown::render("path/to/economic_analysis.Rmd")
 Replace "path/to/economic_analysis.Rmd" with the actual file path.
-5. Integrate the Project with GitHub
-Create a New Repository on GitHub:
-
-Log in to your GitHub account.
-Click the New repository button.
-Name your repository (e.g., economic-analysis-r), add a description, and choose whether it’s public or private.
-Click Create repository.
-Connect Your Local Project to GitHub:
-
-Open RStudio.
-If you have Git installed and configured, go to File → New Project → Version Control → Git.
-Enter the GitHub repository URL and choose a local directory.
-Alternatively, if your project is already created, you can initialize a Git repository in your project folder:
-In RStudio, click Tools → Version Control → Project Setup (or use the Git pane).
-Follow the prompts to initialize Git and commit your files.
-Commit and Push Your Changes:
-
-Use the Git pane in RStudio or your preferred Git client.
-Commit all your files, including:
-economic_analysis.Rmd
-Any supporting files (bibliography file, CSL file, images, etc.).
-Push your commits to GitHub.
-6. Finalizing and Sharing
-Review the Rendered Document:
-Open the PDF output to ensure all tables, figures, and text are correctly formatted.
-
-Include a Detailed README:
-Add this step-by-step guide (or a version of it) to your repository’s README file so others can easily understand how to install, run, and contribute to the project.
-
-Backup and Share:
-Your final project includes both the source RMarkdown file and the rendered output. Share the repository link with colleagues or the community.
-
-By following these detailed steps, anyone should be able to download, set up, and run your RMarkdown project on their own machine, as well as contribute via GitHub. Feel free to modify the instructions to suit your specific workflow or project needs.
-
-
-
-
-
-
-
-
-
-
-
 
