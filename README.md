@@ -1,2 +1,3 @@
 # Creating-RMarkdown-and-Latex-file
 A process to create an RMarkdown file
+This repository contains an R Markdown document that conducts a comprehensive analysis using the Gapminder dataset. The analysis explores the relationship between GDP per capita and life expectancy through descriptive statistics, visualizations, and regression models (including OLS and ARDL specifications). Implemented entirely in R with packages such as tidyverse, psych, and ggplot2, this project serves as a reproducible research resource and a learning tool for data analysis. It demonstrates how economic growth can be linked to public health outcomes and is intended for both educational and research purposes.
