@@ -1,0 +1,225 @@
+---
+title: "Economic Analysis of GDP & Life Expectancy"
+author: "Ayodele Idowu"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+bibliography: ReferenceSampleMarkdown.bib
+csl: apa.csl
+link-citations: true
+---
+
+
+# Executive Summary
+
+This report analyzes the relationship between **GDP per capita** and **life expectancy** using the `gapminder` dataset. The objective is to assess whether economic growth impacts human well-being. We use statistical summaries, visualizations, and regression analysis @idowu2024exploring. Therefore, the study investigates the relationship between GDP per capita and life expectancy using the dataset @smith2020climate.
+
+**Keywords:** Dynamic report, markdown, GDP, POP
+
+# Introduction
+
+According to @andersonstatistical Economic growth is often linked to improvements in **health and quality of life**. This report explores whether **higher GDP per capita** is associated with **longer life expectancy** using global data. The **Gapminder dataset** provides real-world economic and demographic data from various countries @anderson2022nutrition
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+# Load necessary packages
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(gapminder)
+library(broom)
+library(stargazer)
+library(corrplot)
+library(bibtex)
+library(psych)
+library(tidyverse)
+
+# Load the dataset
+data("gapminder")
+```
+
+
+\newpage
+# Methodology
+
+## Description of Variables
+
+The following table provides a description of the variables used in the analysis
+
+
+```{r variable-description, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Create a data frame with the variable descriptions
+variable_descriptions <- data.frame(
+  Variable = c("lifeExp", "gdpPercap", "pop", "continent", "country", "year"),
+  Measurement = c("Years", "USD", "Number of people", "Categorical", "Categorical", "Year"),
+  Description = c(
+    "Life expectancy at birth",
+    "Gross Domestic Product per capita",
+    "Total population",
+    "Continent of the country",
+    "Name of the country",
+    "Year of observation"
+  )
+)
+
+# Display the table
+kable(variable_descriptions, caption = "Description of Variables", format = "latex", booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+```
+
+
+## Model Specification
+
+The relationship between life expectancy and economic factors is estimated using the following **Ordinary Least Squares (OLS) regression model**:
+
+\begin{equation}
+\text{LifeExp}_i = \beta_0 + \beta_1 \cdot \text{GDPpc}_i + \beta_2 \cdot \text{Pop}_i + \beta_3 \cdot \text{Year}_i + \varepsilon_i
+\end{equation}
+
+where:
+
+- \( \text{LifeExp}_i \) represents life expectancy of country \( i \).
+- \( \text{GDPpc}_i \) is the GDP per capita.
+- \( \text{Pop}_i \) is the total population.
+- \( \text{Year}_i \) captures time effects.
+- \( \varepsilon_i \) is the error term.
+
+## ARDL Model Specification
+
+The relationship between life expectancy and economic factors can also be estimated using an **Autoregressive Distributed Lag (ARDL) model**:
+
+\begin{equation}
+\Delta \text{LifeExp}_i = \alpha_0 + \sum_{j=1}^{p} \alpha_{1j} \Delta \text{GDPpc}_{i-j} + \sum_{j=1}^{q} \alpha_{2j} \Delta \text{Pop}_{i-j} + \sum_{j=1}^{r} \alpha_{3j} \Delta \text{Year}_{i-j} + \gamma \text{LifeExp}_{i-1} + \varepsilon_i
+\end{equation}
+
+where:
+
+- \( \Delta \text{LifeExp}_i \) represents the change in life expectancy of country \( i \).
+- \( \Delta \text{GDPpc}_{i-j} \) is the change in GDP per capita lagged by \( j \) periods.
+- \( \Delta \text{Pop}_{i-j} \) is the change in total population lagged by \( j \) periods.
+- \( \Delta \text{Year}_{i-j} \) captures time effects lagged by \( j \) periods.
+- \( \text{LifeExp}_{i-1} \) is the lagged value of life expectancy.
+- \( \varepsilon_i \) is the error term.
+
+
+\newpage
+
+# Results and Findings
+
+## Descriptive Statistics
+
+The table below presents summary statistics for the key variables used in the analysis.
+
+```{r descriptive-stats, echo=FALSE}
+# Compute Descriptive Statistics
+descriptive_stats <- gapminder %>%
+  select(lifeExp, gdpPercap, pop) %>%
+  psych::describe() %>%
+  as.data.frame()
+
+# Transpose the data frame
+descriptive_stats <- t(descriptive_stats)
+
+# Convert to data frame and set row names as the first column
+descriptive_stats <- as.data.frame(descriptive_stats)
+descriptive_stats <- cbind(Statistic = rownames(descriptive_stats), descriptive_stats)
+rownames(descriptive_stats) <- NULL
+
+# Function to format numbers with 4 decimal places and apply scaling
+format_numbers <- function(x) {
+  ifelse(abs(as.numeric(x)) >= 1e6, format(as.numeric(x) / 1e6, digits = 4, nsmall = 4, big.mark = ",", scientific = FALSE), 
+         ifelse(abs(as.numeric(x)) >= 1e3, format(as.numeric(x) / 1e3, digits = 4, nsmall = 4, big.mark = ",", scientific = FALSE), 
+                format(as.numeric(x), digits = 4, nsmall = 4, big.mark = ",", scientific = FALSE)))
+}
+
+# Apply the formatting function to the descriptive statistics
+descriptive_stats[-1] <- lapply(descriptive_stats[-1], format_numbers)
+
+# Display Descriptive Statistics
+kable(descriptive_stats, caption = "Descriptive Statistics", format = "latex", booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position")) %>%
+  column_spec(1, width = "3cm")
+```
+
+## Regression Model Results
+
+```{r regression-model2, results="asis", echo=FALSE}
+# Aggregate data for average GDP per continent
+gdp_continent <- gapminder %>%
+  group_by(continent) %>%
+  summarise(avg_gdpPercap = mean(gdpPercap, na.rm = TRUE))
+
+# Create the bar chart
+ggplot(gdp_continent, aes(x = reorder(continent, -avg_gdpPercap), y = avg_gdpPercap, fill = continent)) +
+  geom_bar(stat = "identity", color = "black") +
+  theme_minimal() +
+  labs(title = "Average GDP per Capita by Continent", x = "Continent", y = "Average GDP per Capita") +
+  theme(legend.position = "none") +
+  geom_text(aes(label = round(avg_gdpPercap, 2)), vjust = -0.5)
+
+# Run the regression model 1
+lm_model <- lm(lifeExp ~ gdpPercap, data=gapminder)
+
+# Convert model results to a tidy format
+model_results <- tidy(lm_model)
+
+# Format p-values to 4 decimal places
+model_results$p.value <- formatC(model_results$p.value, format = "f", digits = 4)
+
+# Display results in a formatted table
+kable(model_results, caption = "Model 1 Regression Results", format = "latex", booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+
+# Regression Model 2: Life Expectancy vs GDP per Capita & Population
+model <- lm(lifeExp ~ gdpPercap + pop, data = gapminder)
+
+# Display results using stargazer
+stargazer_output <- capture.output(
+  stargazer(model, type = "latex",
+            title = "Model 2 Regression Results: Life Expectancy vs GDP per Capita \\& Population",
+            label = "tab:regression_results",
+            dep.var.labels = "Life Expectancy",
+            digits = 4,  # Ensure all values have 4 decimal places
+            notes = c("Source: Author's Compilation", "GDP per capita is measured in USD.", "Population is measured in number of people."))
+)
+
+# Filter out the unwanted lines
+stargazer_output <- stargazer_output[!grepl("Table created by stargazer|Date and time", stargazer_output)]
+
+# Print the filtered output
+cat(stargazer_output, sep = "\n")
+```
+
+## Scatter plot with regression line
+```{r scatter-plot, echo=FALSE}
+# Create scatter plot with regression line
+ggplot(gapminder, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(color = "blue", alpha = 0.5) +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Scatter Plot with Regression Line",
+       x = "GDP per Capita (USD)",
+       y = "Life Expectancy (Years)") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+          
+
+## Analysis of Data and Findings
+
+The results show that there is a positive relationship between GDP per capita and life expectancy. The regression model confirms that GDP has a statistically significant effect on life expectancy. The relationship is positive, but there is variability (some rich countries have lower life expectancy due to other factors). The regression model confirms GDP has a statistically significant effect on life expectancy @idowu2023does. Countries with higher GDP per capita tend to have higher life expectancy @johnson2018data. The relationship is positive, but there is variability (some rich countries have lower life expectancy due to other factors). The regression model confirms GDP has a statistically significant effect on life expectancy. Economic growth is linked to health improvements @idowu2023does
+
+# Conclusion & Recommendations
+
+In line with @aladwani2025influence Governments should invest in economic growth to improve public health. Health policies should not only focus on income but also infrastructure, education, and social services. Future research can explore additional factors (e.g., education, healthcare systems, lifestyle choices).
+
+\newpage
+
+# References
+
